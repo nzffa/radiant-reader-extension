@@ -1,29 +1,29 @@
 - include_stylesheet('admin/reader')
-= render_region :top 
+= render_region :top
 
-#readers_table.outset      
+#readers_table.outset
   %table#readers.index{:cellspacing=>"0", :border=>"0", :cellpadding=>"0"}
     %thead
       %thead
         %tr
           - render_region :thead do |thead|
             - thead.title_header do
-              %th.reader 
+              %th.reader
                 = t('reader_extension.name')
             - thead.email_header do
-              %th.email 
+              %th.email
                 = t('reader_extension.email')
             - thead.groups_header do
               %th.reader_groups
                 = t('reader_extension.groups')
             - thead.description_header do
               - if Radiant.config['reader.show_descriptions?']
-                %th.reader_description 
+                %th.reader_description
                   = t('reader_extension.self_description')
             - thead.modify_header do
               %th.modify
                 = t('modify')
-              
+
     %tbody
       - @readers.each do |reader|
         %tr{:class => reader.disabled? ? 'disabled' : 'active'}
@@ -31,9 +31,9 @@
             - tbody.title_cell do
               %td{:class => reader.activated? ? 'name activated' : 'name inactive'}
                 = link_to gravatar_for(reader, {:size => 32}, {:class => 'avatar avatar_32x32'}), edit_admin_reader_url(reader)
-                = link_to reader.name, edit_admin_reader_url(reader), :class => reader.trusted? ? '' : 'untrusted'
-                %span.info
-                  = "#{reader.nickname}"
+                = link_to (reader.name || '(unnamed)'), edit_admin_reader_url(reader), :class => (reader.trusted? ? '' : 'untrusted')
+                / %span.info
+                /   = "#{reader.nickname}"
                 - unless reader.notes.blank?
                   %p.admin_notes
                     %strong
@@ -43,7 +43,7 @@
             - tbody.email_cell do
               %td.reader_groups
                 = mail_to reader.email
-            
+
             - tbody.groups_cell do
               %td.reader_groups
                 = reader.groups.collect{|g| link_to(g.name, admin_group_url(g)) }.join("\n")
@@ -60,8 +60,8 @@
                     %span.action.disabled= image('minus_disabled') + ' ' + t('remove')
                   - else
                     = link_to(image('minus') + ' ' + t('remove'), admin_reader_url(reader), :method => :delete, :class => 'action', :confirm => t('reader_extension.really_delete_reader', :name => reader.preferred_name))
-        
-      
+
+
   - render_region :bottom do |bottom|
     - bottom.buttons do
       #actions

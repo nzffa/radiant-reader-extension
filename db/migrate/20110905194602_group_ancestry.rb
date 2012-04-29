@@ -5,10 +5,10 @@ class GroupAncestry < ActiveRecord::Migration
     remove_column :groups, :rgt
     add_column :groups, :ancestry, :string
     add_index :groups, :ancestry
-    
+
     Group.reset_column_information
-    Group.build_ancestry_from_parent_ids!
-    
+    # Group.build_ancestry_from_parent_ids!
+
     remove_column :groups, :parent_id
   end
 

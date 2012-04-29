@@ -1,9 +1,9 @@
 class NameParts < ActiveRecord::Migration
   def self.up
-    add_column :readers, :surname, :string
+    # add_column :readers, :surname, :string
   end
 
   def self.down
-    remove_column :readers, :surname, :string
+    # remove_column :readers, :surname, :string
   end
 end

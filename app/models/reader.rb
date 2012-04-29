@@ -20,7 +20,7 @@ class Reader < ActiveRecord::Base
   belongs_to :user
   before_validation :combine_names
   before_update :update_user
-  
+
   belongs_to :created_by, :class_name => 'User'
   belongs_to :updated_by, :class_name => 'User'
   has_many :message_readers
@@ -29,16 +29,16 @@ class Reader < ActiveRecord::Base
   has_many :groups, :through => :memberships, :uniq => true
   accepts_nested_attributes_for :memberships
 
-  validates_presence_of :name, :forename, :surname, :email
+  # validates_presence_of :name, :forename, :surname
   validates_uniqueness_of :nickname, :allow_blank => true
-  validates_length_of :name, :forename, :surname, :maximum => 100, :allow_nil => false
+  validates_length_of :name, :forename, :surname, :maximum => 100, :allow_blank => true
   validates_length_of :password, :minimum => 5, :allow_nil => false, :unless => :existing_reader_keeping_password?
   # validates_format_of :password, :with => /[^A-Za-z]/, :unless => :existing_reader_keeping_password?  # we have to match radiant so that users can log in both ways
   validates_confirmation_of :password, :unless => :existing_reader_keeping_password?
   validate :email_must_not_be_in_use
 
   include RFC822
-  validates_format_of :email, :with => RFC822_valid
+  validates_format_of :email, :with => RFC822_valid, :allow_blank => true
 
   default_scope :order => 'name ASC'
   named_scope :any
@@ -58,10 +58,10 @@ class Reader < ActiveRecord::Base
     end
   }
 
-  named_scope :in_groups, lambda { |groups| 
+  named_scope :in_groups, lambda { |groups|
     {
       :select => "readers.*",
-      :joins => "INNER JOIN memberships as mm on mm.reader_id = readers.id", 
+      :joins => "INNER JOIN memberships as mm on mm.reader_id = readers.id",
       :conditions => ["mm.group_id IN (#{groups.map{'?'}.join(',')})", *groups.map{|g| g.is_a?(Group) ? g.id : g}],
       :group => "mm.reader_id"
     }
@@ -70,7 +70,7 @@ class Reader < ActiveRecord::Base
   def self.find_by_nickname_or_email(nickname_or_email)
     reader = find(:first, :conditions => ["nickname = ? OR email = ?", nickname_or_email, nickname_or_email])
   end
-  
+
   def self.for_user(user)
     if user.respond_to?(:site) && site = Page.current_site
       reader = self.find_or_create_by_site_id_and_user_id(site.id, user.id)
@@ -86,7 +86,7 @@ class Reader < ActiveRecord::Base
     end
     reader
   end
-  
+
   def self.visible_to(reader=nil)
     case Radiant.config['reader.directory_visibility']
     when 'public'
@@ -99,15 +99,15 @@ class Reader < ActiveRecord::Base
       self.none
     end
   end
-  
+
   def visible_to?(reader=nil)
     (reader && (reader == self)) || self.class.visible_to(reader).map(&:id).include?(self.id)
   end
-  
+
   def can_see? (this)
     this.groups.empty? or in_any_of_these_groups?(this.groups)
   end
-    
+
   def in_any_of_these_groups? (grouplist)
     (grouplist & groups).any?
   end
@@ -120,11 +120,11 @@ class Reader < ActiveRecord::Base
     !!membership_of(group)
   end
   alias :is_in? :has_group?
-  
+
   def is_grouped?
     groups.any?
   end
-  
+
   def preferred_name
     nickname? ? nickname : name
   end
@@ -132,11 +132,11 @@ class Reader < ActiveRecord::Base
   def preferred_informal_name
     nickname? ? nickname : forename
   end
-  
+
   def postal_address?
     !post_line1.blank? && !post_city.blank?
   end
-  
+
   def postal_address
     Snail.new(
       :line_1 => post_line1,
@@ -147,32 +147,32 @@ class Reader < ActiveRecord::Base
       :country => post_country
     )
   end
-  
+
   def vcard
-  	@vcard ||= Vpim::Vcard::Maker.make2 do |maker|
-  		maker.add_name do |n|
-  		  n.prefix = honorific || ""
-  		  n.given = forename || ""
-  		  n.family = surname || ""
-		  end
-  		maker.add_addr {|a| 
-  		  a.location = 'home' # until we do this properly with multiple contact sets
+    @vcard ||= Vpim::Vcard::Maker.make2 do |maker|
+      maker.add_name do |n|
+        n.prefix = honorific || ""
+        n.given = forename || ""
+        n.family = surname || ""
+      end
+      maker.add_addr {|a|
+        a.location = 'home' # until we do this properly with multiple contact sets
         a.country = post_country || ""
         a.region = post_province || ""
         a.locality = post_city || ""
         a.street = [post_line1, post_line2].compact.join("\n")
         a.postalcode = postcode || ""
-  		}
-  		maker.add_tel phone { |t| t.location = 'home' } unless phone.blank?
-  		maker.add_tel mobile { |t| t.location = 'cell' } unless mobile.blank?
-  		maker.add_email email { |e| t.location = 'home' }
-  	end
+      }
+      maker.add_tel phone { |t| t.location = 'home' } unless phone.blank?
+      maker.add_tel mobile { |t| t.location = 'cell' } unless mobile.blank?
+      maker.add_email email { |e| t.location = 'home' }
+    end
   end
-  
+
   def filename
     name.downcase.gsub(/\W/, '_')
   end
-  
+
   def activate!
     self.activated_at = Time.now.utc
     self.newly_activated = true
@@ -184,7 +184,7 @@ class Reader < ActiveRecord::Base
   def activated?
     !inactive?
   end
-  
+
   def newly_activated?
     !!newly_activated
   end
@@ -221,7 +221,7 @@ class Reader < ActiveRecord::Base
   def is_admin?
     is_user? && self.user.admin?
   end
-  
+
   def create_password!
     self.clear_password = self.password_confirmation = self.randomize_password # randomize_password is provided by authlogic
     self.save! unless self.new_record?
@@ -233,7 +233,7 @@ class Reader < ActiveRecord::Base
       homegroup.homepage
     end
   end
-  
+
   def home_url
     if homepage = self.find_homepage
       homepage.url
@@ -241,7 +241,7 @@ class Reader < ActiveRecord::Base
       nil
     end
   end
-  
+
   # Generates a csv file listing the supplied group of readers.
   # No access checks are performed here.
   #
@@ -259,63 +259,73 @@ class Reader < ActiveRecord::Base
   def self.vcards_for(readers=[])
     readers.map(&:vcard).join("\n")
   end
-  
+
   def send_group_invitation_message(group=nil)
     send_functional_message('group_invitation', group)
   end
-  
-private
 
-  def combine_names
-    if self.forename_changed? || self.surname_changed?
-      self.name = "#{self.forename} #{self.surname}"
-    elsif self.name_changed?
-      self.forename = self.name.split(/\s+/).first
-      self.surname = self.name.split(/\s+/).last
-    end
-    self.forename = self.name.split(/\s+/).first unless self.forename?
-    self.surname = self.name.split(/\s+/).last unless self.surname?
-    self.name = "#{self.forename} #{self.surname}" unless self.name?
+  def disabled?
+    false
   end
 
-  def email_must_not_be_in_use
-    reader = Reader.find_by_email(self.email)
-    user = User.find_by_email(self.email)
-    if user && user != self.user
-      errors.add :email, :taken_by_author
-    elsif reader && reader != self
-      errors.add :email, :taken
-    else
-      return true
-    end
-    return false
-  end
+  private
 
-  def existing_reader_keeping_password?
-    !new_record? && !password_changed?
-  end
+    def combine_names
+      if forename_changed? || surname_changed?
+        self.name = join_name_parts
+      elsif name_changed? && name.present?
+        self.forename = self.name.split(/\s+/).first
+        self.surname = self.name.split(/\s+/).last
+      end
+      if name.present?
+        self.forename ||= self.name.split(/\s+/).first
+        self.surname ||= self.name.split(/\s+/).last
+      end
+      self.name ||= join_name_parts
+    end
 
-  def update_user
-    if self.user && !self.skip_user_update
-      changed_columns = Reader.user_columns & self.changed
-      att = self.attributes.slice(*changed_columns)
-      att['password'] = self.password if self.crypted_password_changed?
-      self.user.send :update_with, att if att.any?
+    def join_name_parts
+      [forename, surname].reject(&:blank?).join(' ')
     end
-    true
-  end
-  
-  def update_with(att)
-    self.skip_user_update = true
-    if att['password']
-      att["clear_password"] = att["password_confirmation"] = att["password"]
+
+    def email_must_not_be_in_use
+      reader = Reader.find_by_email(self.email)
+      user = User.find_by_email(self.email)
+      if user && user != self.user
+        errors.add :email, :taken_by_author
+      elsif reader && reader != self
+        errors.add :email, :taken
+      else
+        return true
+      end
+      return false
     end
-    self.update_attributes(att)
-    self.skip_user_update = false
-  end
-  
-  def send_group_welcomes
-    groups.each { |g| g.send_welcome_to(self) }
-  end
+
+    def existing_reader_keeping_password?
+      !new_record? && !password_changed?
+    end
+
+    def update_user
+      if self.user && !self.skip_user_update
+        changed_columns = Reader.user_columns & self.changed
+        att = self.attributes.slice(*changed_columns)
+        att['password'] = self.password if self.crypted_password_changed?
+        self.user.send :update_with, att if att.any?
+      end
+      true
+    end
+
+    def update_with(att)
+      self.skip_user_update = true
+      if att['password']
+        att["clear_password"] = att["password_confirmation"] = att["password"]
+      end
+      self.update_attributes(att)
+      self.skip_user_update = false
+    end
+
+    def send_group_welcomes
+      groups.each { |g| g.send_welcome_to(self) }
+    end
 
 end

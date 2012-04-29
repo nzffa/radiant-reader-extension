@@ -6,7 +6,7 @@ class SnailAddresses < ActiveRecord::Migration
     rename_column :readers, :post_town, :post_city
     rename_column :readers, :post_county, :post_province
     add_column :readers, :post_country, :string
-    add_column :readers, :mobile, :string
+    # add_column :readers, :mobile, :string
   end
 
   def self.down
