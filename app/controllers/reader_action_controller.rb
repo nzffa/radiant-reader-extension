@@ -32,7 +32,8 @@ class ReaderActionController < ApplicationController
   end
   
   def default_welcome_url(reader=nil)
-    (reader && reader.home_url) || reader_dashboard_url
+    #(reader && reader.home_url) || reader_dashboard_url
+    reader_dashboard_url
   end
 
 protected
