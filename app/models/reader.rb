@@ -40,7 +40,7 @@ class Reader < ActiveRecord::Base
   include RFC822
   validates_format_of :email, :with => RFC822_valid, :allow_blank => true
 
-  default_scope :order => 'name ASC'
+  default_scope :order => 'surname, name'
   named_scope :any
   named_scope :none, { :conditions => "1 = 0" }   # nasty! but doesn't break chains
   named_scope :active, :conditions => "activated_at IS NOT NULL"
