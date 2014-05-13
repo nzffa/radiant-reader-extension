@@ -11,7 +11,8 @@ module ReaderHelper
     size = Radiant::Config['reader.gravatar_size'] || 40
     url ||= reader_url(reader)
     gravatar = gravatar_for(reader, {:size => size}, {:class => 'gravatar offset', :width => size, :height => size})
-    content_tag(:div, link_to(gravatar, url), :class => "speaker", :width => size, :height => size)
+    content = (url == :false ? gravatar : link_to(gravatar, url))
+    content_tag(:div, content, :class => "speaker", :width => size, :height => size)
   end
 
   def gravatar_for(reader=nil, gravatar_options={}, img_options ={})
