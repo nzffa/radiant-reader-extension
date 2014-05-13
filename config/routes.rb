@@ -1,6 +1,6 @@
 ActionController::Routing::Routes.draw do |map|
   map.namespace :admin do |admin|
-    admin.resources :readers, :except => [:show]
+    admin.resources :readers
     admin.resource :reader_settings, :controller => 'reader_configuration'
   end
 

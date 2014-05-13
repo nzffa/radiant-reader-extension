@@ -16,6 +16,10 @@ class Admin::ReadersController < Admin::ResourceController
     response_for :create
   end
 
+  def show
+    redirect_to :action => :edit
+  end
+
   private
 
     def load_models
