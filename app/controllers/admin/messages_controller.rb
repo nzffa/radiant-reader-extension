@@ -78,7 +78,7 @@ protected
 
   def continue_url(options)
     if action_name == "destroy"
-      redirect_to :back
+      '/admin/readers/messages'
     else
       options[:redirect_to] || (params[:continue] ? {:action => 'edit', :id => model.id} : admin_message_url(model))
     end
