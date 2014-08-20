@@ -1,4 +1,6 @@
 = render_region :form_top
+- include_javascript 'extensions/ck_editor_filter/ckeditor/ckeditor'
+- include_javascript 'extensions/ck_editor_filter/radiant.ckeditor.reader_messages'
 
 .form-area
   - render_region :form do |formpart|
@@ -38,3 +40,9 @@
       = save_model_and_continue_editing_button(@message)
       = t('or')
       = link_to t("cancel"), @message.new_record? ? admin_messages_url : admin_message_url(@message)
+
+:javascript
+  Event.observe(window,'load',function(){ 
+    instantiateCkEditor('message_body')
+  })
+  Event.observe($('message_filter_id'),'change',function(){ toggleEditor('message_body') })
